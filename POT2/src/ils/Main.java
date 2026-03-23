@@ -29,7 +29,9 @@ public class Main {
 		} else if (escolhaGrafo == 4) {
 			grafoEscolhido = "POT2/src/grafoJ.txt";
 		}
-		
+
+	    long startTime = System.nanoTime();
+
 		int[][] grafo = lerArquivo(grafoEscolhido);
 		
 		scanner.close();
@@ -39,6 +41,8 @@ public class Main {
 	    int maxIteracoes = 100; 
 	    int n = grafo.length;
 	    int origem = 0;
+
+	    
 
 	    // Gerando solução inicial
 	    int[] melhorSolucaoGlobal = gerarSolucaoAleatoria(n, origem);
@@ -70,6 +74,12 @@ public class Main {
 	            System.out.println("\nIteração " + i + ": Nova melhor solução encontrada \nCusto: " + melhorCustoGlobal);
 	        }
 	    }
+
+	    long endTime = System.nanoTime();
+	    long durationNs = endTime - startTime;
+	    long durationMs = durationNs / 1_000_000;
+	    double durationSec = durationNs / 1_000_000_000.0;
+	    System.out.println("\nTempo de execução do ILS: " + durationMs + " ms (" + String.format("%.3f", durationSec) + " s)");
 
 	    System.out.println("\nResultado Final do ILS");
 	    System.out.print("Melhor Rota: ");
