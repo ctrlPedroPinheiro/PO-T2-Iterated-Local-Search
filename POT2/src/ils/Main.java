@@ -1,15 +1,14 @@
-//
+// T2-PO-Bruna-Lucas-Messias-Nathalia-Pedro-Wellington
 package ils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 
 public class Main {
+
+	private static final Random random = new Random();
 
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
@@ -39,20 +38,17 @@ public class Main {
 	    
 	    // Parâmetros
 	    int maxIteracoes = 100; 
-	    int n = grafo.length;
 	    int origem = 0;
 
-	    
-
 	    // Gerando solução inicial
-	    int[] melhorSolucaoGlobal = gerarSolucaoAleatoria(n, origem);
+	    int[] melhorSolucaoGlobal = gerarSolucaoInicial(grafo, origem);
 	    imprimirSolucao(melhorSolucaoGlobal);
 	    int melhorCustoGlobal = calcularCustoTotal(grafo, melhorSolucaoGlobal);
 	    System.out.println("\nCusto Inicial: " + melhorCustoGlobal);
 	    
 	    // Primeira melhoria local com o 2-opt
 	    System.out.println("\nRealizando primeira busca local...");
-	    melhorSolucaoGlobal = algoritmo2Opt(melhorSolucaoGlobal, grafo);
+	    melhorSolucaoGlobal = buscaLocal(melhorSolucaoGlobal, grafo);
 	    imprimirSolucao(melhorSolucaoGlobal);
 	    int melhorCustoGlobal2 = calcularCustoTotal(grafo, melhorSolucaoGlobal);
 	    System.out.println("\nCusto pós melhora local : " + melhorCustoGlobal2);
@@ -64,13 +60,13 @@ public class Main {
 	        int[] solucaoPerturbada = doubleBridge(melhorSolucaoGlobal);
 	        
 	        // Busca Local
-	        int[] solucaoRefinada = algoritmo2Opt(solucaoPerturbada, grafo);
+	        int[] solucaoRefinada = buscaLocal(solucaoPerturbada, grafo);
 	        int custoRefinado = calcularCustoTotal(grafo, solucaoRefinada);
 
 	        // Critério de Aceite
 	        if (custoRefinado < melhorCustoGlobal) {
 	            melhorCustoGlobal = custoRefinado;
-	            melhorSolucaoGlobal = solucaoRefinada.clone();
+	            melhorSolucaoGlobal = solucaoRefinada;
 	            System.out.println("\nIteração " + i + ": Nova melhor solução encontrada \nCusto: " + melhorCustoGlobal);
 	        }
 	    }
@@ -132,31 +128,39 @@ public class Main {
 	}
 	
 	/**
-	 * Gera uma suloção aleatória inical para o ILS
-	 * @param n Número de vértices
-	 * @param origem Ponto de partida
-	 * @return Um vetor contendo uma solução inicial
+	 * Gera uma solução inicial gulosa
+	 * @param n Número de vértices do grafo
+	 * @param origem Vértice de origem para a solução
+	 * @return Solução inicial gerada
 	 */
-	public static int[] gerarSolucaoAleatoria(int n, int origem) {
-	    int[] caminho = new int[n + 1];
-	    List<Integer> verticesRestantes = new ArrayList<>();
+	public static int[] gerarSolucaoInicial(int[][] matriz, int origem) {
+		int n = matriz.length;
+		int[] ciclo = new int[n + 1];
+		boolean[] visitado = new boolean[n];
 
-	    for (int i = 0; i < n; i++) {
-	        if (i != origem) {
-	        	verticesRestantes.add(i);
-	        }
-	    }
+		ciclo[0] = origem;
+		visitado[origem] = true;
 
-	    Collections.shuffle(verticesRestantes);
+		for (int i = 1; i < n; i++) {
+			int ultimo = ciclo[i - 1];
+			int melhorVizinho = -1;
+			int menorCusto = Integer.MAX_VALUE;
 
-	    caminho[0] = origem;
-	    for (int i = 0; i < verticesRestantes.size(); i++) {
-	        caminho[i + 1] = verticesRestantes.get(i);
-	    }
-	    caminho[n] = origem;
+			for (int j = 0; j < n; j++) {
+				if (!visitado[j] && matriz[ultimo][j] < menorCusto) {
+					menorCusto = matriz[ultimo][j];
+					melhorVizinho = j;
+				}
+			}
 
-	    System.out.println("\nSolução Inicial Aleatória Gerada.");
-	    return caminho;
+			ciclo[i] = melhorVizinho;
+			visitado[melhorVizinho] = true;
+		}
+
+		ciclo[n] = origem;
+
+		System.out.println("\nSolução Inicial Gulosa Gerada.");
+		return ciclo;
 	}
 
 	/**
@@ -165,137 +169,144 @@ public class Main {
 	 * @param caminho Solução que terá seu custo calculado
 	 * @return Custo total da solução
 	 */
-	public static int calcularCustoTotal(int[][] matriz, int[] caminho) {
+	public static int calcularCustoTotal(int[][] matriz, int[] ciclo) {
 		int custo = 0;
-		int n = caminho.length;
+		int n = ciclo.length;
 		
 		for (int i = 0; i < n - 1; i++) {
-	        custo += matriz[caminho[i]][caminho[i+1]];
+	        custo += matriz[ciclo[i]][ciclo[i+1]];
 	    }
 		
-		custo += matriz[caminho[n-1]][caminho[0]];
+		custo += matriz[ciclo[n-1]][ciclo[0]];
 		
 		return custo;
 	}
 	
 	/**
 	 * Procura por melhores soluções trocando dois segmentos do grafo
-	 * @param caminhoAtual O caminho que se deseja buscar
+	 * @param cicloAtual O ciclo que se deseja buscar
 	 * @param matriz Matriz de adjacencia para o calculo do custo total
-	 * @return Um caminho melhor ou igual ao anterior
+	 * @return Um ciclo melhor ou igual ao anterior
 	 */
-	public static int[] algoritmo2Opt(int[] caminhoAtual, int[][] matriz) {
-		int n = caminhoAtual.length;
-		int[] melhorCaminho = caminhoAtual.clone();
+	public static int[] buscaLocal(int[] ciclo, int[][] matriz) {
+		int n = ciclo.length;
 		boolean melhora = true;
-		
-		while(melhora) {
+
+		while (melhora) {
 			melhora = false;
-			for (int i = 1; i < n-1; i++) {
-				for (int j = i+1; j < n; j++) {
-					int[] novoCaminho = inverterSegmento(melhorCaminho, i, j);
-					
-					int custoAntigo = calcularCustoTotal(matriz, melhorCaminho);
-					int custoNovo = calcularCustoTotal(matriz, novoCaminho);
-					
-					if (custoNovo < custoAntigo) {
-						melhorCaminho = novoCaminho;
+
+			for (int i = 1; i < n - 2; i++) {
+				for (int j = i + 1; j < n - 1; j++) {
+
+					int a = ciclo[i - 1];
+					int b = ciclo[i];
+					int c = ciclo[j];
+					int d = ciclo[j + 1];
+
+					int delta =
+							- matriz[a][b]
+							- matriz[c][d]
+							+ matriz[a][c]
+							+ matriz[b][d];
+
+					if (delta < 0) {
+						inverterSegmento(ciclo, i, j);
 						melhora = true;
+
+						break;
 					}
 				}
+				if (melhora) break;
 			}
 		}
-		return melhorCaminho;
+
+		return ciclo;
 	}
 	
 	/**
 	 * Troca a posição de dois vértices em uma solução
-	 * @param caminho Solução que passará pela inversão de segmentos
+	 * @param ciclo Solução que passará pela inversão de segmentos
 	 * @param i Posição do primeiro vértice
 	 * @param j	Posição do segundo vértice
-	 * @return	A solução com os dois vértices trocados
 	 */
-	private static int[] inverterSegmento(int[] caminho, int i, int j) {
-	    int[] novoCaminho = caminho.clone();
+	private static void inverterSegmento(int[] ciclo, int i, int j) {
 	    while (i < j) {
-	        int temp = novoCaminho[i];
-	        novoCaminho[i] = novoCaminho[j];
-	        novoCaminho[j] = temp;
-	        i++;
-	        j--;
-	    }
-	    return novoCaminho;
+        int temp = ciclo[i];
+        ciclo[i] = ciclo[j];
+        ciclo[j] = temp;
+        i++;
+        j--;
+    }
 	}
 	
 	/**
 	 * Imprime na tela uma solução 
-	 * @param caminho Vetor que contém a solução
+	 * @param ciclo Vetor que contém a solução
 	 */
-	public static void imprimirSolucao(int[] caminho) {
-		for (int i = 0; i < caminho.length; i++) {
-			System.out.print(caminho[i] + " ");
+	public static void imprimirSolucao(int[] ciclo) {
+		for (int i = 0; i < ciclo.length; i++) {
+			System.out.print(ciclo[i] + " ");
 		}
 	}
 	
 	/**
 	 * Algoritmo responsável pelo perturbação das soluções
-	 * @param caminho Vetor que contém a solução
+	 * @param ciclo Vetor que contém a solução
 	 * @return Vetor contendo a solução perturbada
 	 */
-	public static int[] doubleBridge(int[] caminho) {
-	    int n = caminho.length - 1;
-	    
-	    if (n < 8) {
-	        return swap(caminho);
-	    }
+	public static int[] doubleBridge(int[] ciclo) {
+			int n = ciclo.length - 1;
 
-	    int[] novoCaminho = new int[caminho.length];
-	    Random random = new Random();
-	    
-	    // Divide o caminho
-	    int tamParte = n / 4;
-	    int corte1 = 1 + random.nextInt(tamParte);
-	    int corte2 = corte1 + 1 + random.nextInt(tamParte);
-	    int corte3 = corte2 + 1 + random.nextInt(tamParte);
-	    
-	    int posicao = 0;
-	    
-	    for (int i = 0; i <= corte1; i++) {
-	        novoCaminho[posicao++] = caminho[i];
-	    }
-	    
-	    for (int i = corte3 + 1; i < n; i++) {
-	        novoCaminho[posicao++] = caminho[i];
-	    }
-	    
-	    for (int i = corte2 + 1; i <= corte3; i++) {
-	        novoCaminho[posicao++] = caminho[i];
-	    }
-	    
-	    for (int i = corte1 + 1; i <= corte2; i++) {
-	        novoCaminho[posicao++] = caminho[i];
-	    }
-	    
-	    novoCaminho[n] = caminho[0];
-	    
-	    return novoCaminho;
+		if (n < 8) {
+			return swap(ciclo);
+		}
+
+		int[] novo = new int[ciclo.length];
+
+		// Faz 3 cortes aleatórios para criar 4 partes
+		int a = 1 + random.nextInt(n - 3);
+		int b = a + 1 + random.nextInt(n - a - 2);
+		int c = b + 1 + random.nextInt(n - b - 1);
+
+		int pos = 0;
+
+		// A
+		for (int i = 0; i <= a; i++) novo[pos++] = ciclo[i];
+
+		// D
+		for (int i = c + 1; i < n; i++) novo[pos++] = ciclo[i];
+
+		// C
+		for (int i = b + 1; i <= c; i++) novo[pos++] = ciclo[i];
+
+		// B
+		for (int i = a + 1; i <= b; i++) novo[pos++] = ciclo[i];
+
+		novo[n] = novo[0];
+
+		return novo;
 	}
 	
 	/**
 	 * Perturbação simples para vértices pequenos
-	 * @param caminho Vetor que contém a solução
+	 * @param ciclo Vetor que contém a solução
 	 * @return Vetor contendo a solução perturbada
 	 */
-	private static int[] swap(int[] caminho) {
-	    int[] novoCaminho = caminho.clone();
-	    Random random = new Random();
-	    if (caminho.length > 3) {
-	        int i = 1 + random.nextInt(caminho.length - 2);
-	        int j = 1 + random.nextInt(caminho.length - 2);
-	        int temp = novoCaminho[i];
-	        novoCaminho[i] = novoCaminho[j];
-	        novoCaminho[j] = temp;
-	    }
-	    return novoCaminho;
+	private static int[] swap(int[] ciclo) {
+	    int[] novo = ciclo.clone();
+
+		if (ciclo.length > 3) {
+			int i = 1 + random.nextInt(ciclo.length - 2);
+			int j;
+			do {
+				j = 1 + random.nextInt(ciclo.length - 2);
+			} while (i == j);
+
+			int temp = novo[i];
+			novo[i] = novo[j];
+			novo[j] = temp;
+		}
+
+		return novo;
 	}
 }
