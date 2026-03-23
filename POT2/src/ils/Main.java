@@ -15,39 +15,42 @@ public class Main {
 		Scanner scanner = new Scanner(System.in);
 	    // Carregamento do grafo escolhido
 		System.out.println("Escolha o grafo que será carregado:"
-				+ "\n(1) Grafo G | Principal | 4 Vértices  | 6 Arestas"
-				+ "\n(2) Grafo H | Teste     | 10 Vértices | 45 Arestas"
-				+ "\n(3) Grafo I | Teste     | 50 Vértices | 1225 Arestas");
+				+ "\n(1) Grafo G | Principal | 4 Vértices   | 6 Arestas"
+				+ "\n(2) Grafo H | Teste     | 10 Vértices  | 45 Arestas"
+				+ "\n(3) Grafo I | Teste     | 50 Vértices  | 1225 Arestas"
+				+ "\n(4) Grafo J | Teste     | 100 Vértices | 4950 Arestas");
 		
 		int escolhaGrafo = scanner.nextInt();
-		String grafo = "src/grafoG.txt";
+		String grafoEscolhido = "POT2/src/grafoG.txt";
 		if (escolhaGrafo == 2) {
-			grafo = "src/grafoH.txt";
+			grafoEscolhido = "POT2/src/grafoH.txt";
 		} else if (escolhaGrafo == 3) {
-			grafo = "src/grafoI.txt";
+			grafoEscolhido = "POT2/src/grafoI.txt";
+		} else if (escolhaGrafo == 4) {
+			grafoEscolhido = "POT2/src/grafoJ.txt";
 		}
 		
-		int[][] grafoG = lerArquivo(grafo);
+		int[][] grafo = lerArquivo(grafoEscolhido);
 		
 		scanner.close();
-	    if (grafoG == null) return;
+	    if (grafo == null) return;
 	    
 	    // Parâmetros
-	    int maxIteracoes = 50; 
-	    int n = grafoG.length;
+	    int maxIteracoes = 100; 
+	    int n = grafo.length;
 	    int origem = 0;
 
 	    // Gerando solução inicial
 	    int[] melhorSolucaoGlobal = gerarSolucaoAleatoria(n, origem);
 	    imprimirSolucao(melhorSolucaoGlobal);
-	    int melhorCustoGlobal = calcularCustoTotal(grafoG, melhorSolucaoGlobal);
+	    int melhorCustoGlobal = calcularCustoTotal(grafo, melhorSolucaoGlobal);
 	    System.out.println("\nCusto Inicial: " + melhorCustoGlobal);
 	    
 	    // Primeira melhoria local com o 2-opt
 	    System.out.println("\nRealizando primeira busca local...");
-	    melhorSolucaoGlobal = algoritmo2Opt(melhorSolucaoGlobal, grafoG);
+	    melhorSolucaoGlobal = algoritmo2Opt(melhorSolucaoGlobal, grafo);
 	    imprimirSolucao(melhorSolucaoGlobal);
-	    int melhorCustoGlobal2 = calcularCustoTotal(grafoG, melhorSolucaoGlobal);
+	    int melhorCustoGlobal2 = calcularCustoTotal(grafo, melhorSolucaoGlobal);
 	    System.out.println("\nCusto pós melhora local : " + melhorCustoGlobal2);
 
 	    // Loop principal do ILS
@@ -57,8 +60,8 @@ public class Main {
 	        int[] solucaoPerturbada = doubleBridge(melhorSolucaoGlobal);
 	        
 	        // Busca Local
-	        int[] solucaoRefinada = algoritmo2Opt(solucaoPerturbada, grafoG);
-	        int custoRefinado = calcularCustoTotal(grafoG, solucaoRefinada);
+	        int[] solucaoRefinada = algoritmo2Opt(solucaoPerturbada, grafo);
+	        int custoRefinado = calcularCustoTotal(grafo, solucaoRefinada);
 
 	        // Critério de Aceite
 	        if (custoRefinado < melhorCustoGlobal) {
@@ -113,7 +116,6 @@ public class Main {
 			}
 			leitor.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			System.err.println("Arquivo não encontrado.");
 		}
 		return null;
