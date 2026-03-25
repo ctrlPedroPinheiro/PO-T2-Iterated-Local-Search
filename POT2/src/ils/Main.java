@@ -20,13 +20,14 @@ public class Main {
 				+ "\n(4) Grafo J | Teste     | 100 Vértices | 4950 Arestas");
 		
 		int escolhaGrafo = scanner.nextInt();
-		String grafoEscolhido = "POT2/src/grafoG.txt";
+		String caminhoRelativo = "POT2" + File.separator + "src" + File.separator;
+		String grafoEscolhido = caminhoRelativo + "grafoG.txt";
 		if (escolhaGrafo == 2) {
-			grafoEscolhido = "POT2/src/grafoH.txt";
+			grafoEscolhido = caminhoRelativo + "grafoH.txt";
 		} else if (escolhaGrafo == 3) {
-			grafoEscolhido = "POT2/src/grafoI.txt";
+			grafoEscolhido = caminhoRelativo + "grafoI.txt";
 		} else if (escolhaGrafo == 4) {
-			grafoEscolhido = "POT2/src/grafoJ.txt";
+			grafoEscolhido = caminhoRelativo + "grafoJ.txt";
 		}
 
 	    long startTime = System.nanoTime();
@@ -101,9 +102,7 @@ public class Main {
 				
 				System.out.println("\nGrafo"
 						+ "\nNº de Vértices: " + nVertices
-						+ "\nNº de Arestas: " + nArestas
-						+ "\nMatriz de Adjacência: "
-						);
+						+ "\nNº de Arestas: " + nArestas);
 				
 				int [][] grafo = new int[nVertices][nVertices];
 				
@@ -112,10 +111,8 @@ public class Main {
 					for (int j = 0; j < nVertices; j++) {
 						if (leitor.hasNext()) {
 							grafo[i][j] = leitor.nextInt();
-							System.out.print(grafo[i][j] + " ");
 						}
 					}
-					System.out.println();
 				}
 				leitor.close();
 				return grafo;
@@ -166,18 +163,16 @@ public class Main {
 	/**
 	 * Calcula o custo total da solução
 	 * @param matriz Matriz de adjacencia contendo todos as distâncias entre cada vértice
-	 * @param caminho Solução que terá seu custo calculado
+	 * @param ciclo Solução que terá seu custo calculado
 	 * @return Custo total da solução
 	 */
 	public static int calcularCustoTotal(int[][] matriz, int[] ciclo) {
 		int custo = 0;
-		int n = ciclo.length;
+		int n = ciclo.length - 1;
 		
-		for (int i = 0; i < n - 1; i++) {
+		for (int i = 0; i < n; i++) {
 	        custo += matriz[ciclo[i]][ciclo[i+1]];
 	    }
-		
-		custo += matriz[ciclo[n-1]][ciclo[0]];
 		
 		return custo;
 	}

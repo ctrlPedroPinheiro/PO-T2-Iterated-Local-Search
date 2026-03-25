@@ -1,8 +1,2 @@
-/**
- * 
- */
-/**
- * 
- */
-module poT2 {
+module ils {
 }
