@@ -262,16 +262,16 @@ public class Main {
 	public static int[] doubleBridge(int[] ciclo) {
 		int n = ciclo.length - 1;
 
-		if (n < 8) {
+		if (n < 4) {
 			return swap(ciclo);
 		}
 
 		int[] novo = new int[ciclo.length];
 
 		// Faz 3 cortes aleatórios para criar 4 partes
-		int a = 1 + random.nextInt(n - 3);
-		int b = a + 1 + random.nextInt(n - a - 2);
-		int c = b + 1 + random.nextInt(n - b - 1);
+		int a = 1 + (n == 4 ? 0 : random.nextInt(n - 4));
+		int b = a + 1 + (n == 4 ? 0 : random.nextInt(n - a - 3));
+		int c = b + 1 + (n == 4 ? 0 : random.nextInt(n - b - 2));
 
 		int pos = 0;
 
